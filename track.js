@@ -42,22 +42,23 @@ var cronJob = cron.job("*/60 * * * * *", function() {
     temporaryEmailOpens = {};
 
     if (temporaryEmailOpensArray.length > 0) {
-        // request({
-        //     url: 'https://tabulae.newsai.org/api/incoming/internal_tracker',
-        //     method: 'POST',
-        //     json: temporaryEmailOpensArray,
-        //     auth: {
-        //         user: 'jebqsdFMddjuwZpgFrRo',
-        //         password: ''
-        //     },
-        //     maxAttempts: 1
-        // }, function(error, response, body) {
-        //     if (!error && response.statusCode == 200) {
-
-        //     } else {
-
-        //     }
-        // });
+        console.log(temporaryEmailOpensArray);
+        request({
+            url: 'https://tabulae.newsai.org/api/incoming/internal_tracker',
+            method: 'POST',
+            json: temporaryEmailOpensArray,
+            auth: {
+                user: 'jebqsdFMddjuwZpgFrRo',
+                password: ''
+            },
+            maxAttempts: 1
+        }, function(error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log(response);
+            } else {
+                console.error(error);
+            }
+        });
     }
 });
 
