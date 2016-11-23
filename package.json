@@ -1,0 +1,24 @@
+{
+  "name": "track",
+  "version": "0.0.1",
+  "description": "Email tracking for Gmail/SMTP emails",
+  "main": "track.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/news-ai/track.git"
+  },
+  "author": "NewsAI",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/news-ai/track/issues"
+  },
+  "homepage": "https://github.com/news-ai/track#readme",
+  "dependencies": {
+    "cron": "^1.1.1",
+    "express": "^4.14.0",
+    "requestretry": "^1.12.0"
+  }
+}
