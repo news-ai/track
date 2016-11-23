@@ -17,7 +17,10 @@ app.get('/', function(req, res) {
             }
             temporaryEmailOpens[email_id] += 1;
 
-            res.status(204).send();
+            var buf = new Buffer(35);
+            buf.write("R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=", "base64");
+            res.send(buf, { 'Content-Type': 'image/gif' }, 200);
+
             return;
         }
     }
