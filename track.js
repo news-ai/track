@@ -53,9 +53,7 @@ var cronJob = cron.job("*/60 * * * * *", function() {
             },
             maxAttempts: 1
         }, function(error, response, body) {
-            if (!error && response.statusCode == 200) {
-                console.log(response);
-            } else {
+            if (error) {
                 console.error(error);
             }
         });
