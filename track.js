@@ -4,35 +4,64 @@ var request = require('requestretry');
 
 var app = express();
 
-var temporaryEmailOpens = [];
+var temporaryEmailOpens = {};
 
 app.get('/', function(req, res) {
-    res.send('Hello World!');
-});
+    var email_id = req.query.id;
 
-app.listen(3000, function() {
-    console.log('Example app listening on port 3000!');
+    if (email_id) {
+        var isnum = /^\d+$/.test(email_id);
+        if (isnum) {
+            if (!temporaryEmailOpens.hasOwnProperty(email_id)) {
+                temporaryEmailOpens[email_id] = 0;
+            }
+            temporaryEmailOpens[email_id] += 1;
+
+            res.status(204).send();
+            return;
+        }
+    }
+
+    res.send('No ID present.');
 });
 
 var cronJob = cron.job("*/60 * * * * *", function() {
-    // perform operation e.g. GET request http.get() etc.
-    console.info('cron job completed');
-    request({
-        url: 'https://tabulae.newsai.org/api/incoming/internal_tracker',
-        method: 'POST',
-        json: temporaryEmailOpens,
-        auth: {
-            user: 'jebqsdFMddjuwZpgFrRo',
-            password: ''
-        },
-        maxAttempts: 1
-    }, function(error, response, body) {
-        if (!error && response.statusCode == 200) {
+    var temporaryEmailOpensArray = [];
 
-        } else {
-
+    for (var key in temporaryEmailOpens) {
+        if (temporaryEmailOpens.hasOwnProperty(key)) {
+            console.log(temporaryEmailOpens);
+            temporaryEmailOpensArray.push({
+                id: key,
+                event: 'open',
+                count: temporaryEmailOpens[key]
+            });
         }
-    });
+    }
+
+    temporaryEmailOpens = {};
+
+    if (temporaryEmailOpensArray.length > 0) {
+        // request({
+        //     url: 'https://tabulae.newsai.org/api/incoming/internal_tracker',
+        //     method: 'POST',
+        //     json: temporaryEmailOpensArray,
+        //     auth: {
+        //         user: 'jebqsdFMddjuwZpgFrRo',
+        //         password: ''
+        //     },
+        //     maxAttempts: 1
+        // }, function(error, response, body) {
+        //     if (!error && response.statusCode == 200) {
+
+        //     } else {
+
+        //     }
+        // });
+    }
 });
 
-cronJob.start();
+app.listen(8080, function() {
+    cronJob.start();
+    console.log('Example app listening on port 8080!');
+});
