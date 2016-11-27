@@ -30,8 +30,17 @@ app.get('/', function(req, res) {
 });
 
 app.get('/a', function(req, res) {
+    var rawQueryParameters = require('url').parse(req.url).query;
+    var emailUrlRaw = rawQueryParameters.split('&url=');
+
+    if (emailUrlRaw.length > 1) {
+        emailUrlRaw = emailUrlRaw[1];
+    } else {
+        emailUrlRaw = false;
+    }
+
     var email_id = req.query.id;
-    var email_url = req.query.url;
+    var email_url = emailUrlRaw || req.query.url;
 
     if (email_id) {
         var isnum = /^\d+$/.test(email_id);
