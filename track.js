@@ -5,6 +5,7 @@ var request = require('requestretry');
 var app = express();
 
 var temporaryEmailOpens = {};
+var temporaryEmailClicks = {};
 
 app.get('/', function(req, res) {
     var email_id = req.query.id;
@@ -28,13 +29,36 @@ app.get('/', function(req, res) {
     res.send('No ID present.');
 });
 
+app.get('/a', function(req, res) {
+    var email_id = req.query.id;
+    var email_url = req.query.url;
+
+    if (email_id) {
+        var isnum = /^\d+$/.test(email_id);
+        if (isnum) {
+            if (!temporaryEmailClicks.hasOwnProperty(email_id)) {
+                temporaryEmailClicks[email_id] = 0;
+            }
+            temporaryEmailClicks[email_id] += 1;
+
+            res.writeHead(302, {
+                'Location': email_url
+            });
+
+            res.end();
+            return;
+        }
+    }
+
+    res.send('No ID present.');
+});
+
 var cronJob = cron.job("*/60 * * * * *", function() {
-    var temporaryEmailOpensArray = [];
+    var temporaryEmailInteractionsArray = [];
 
     for (var key in temporaryEmailOpens) {
         if (temporaryEmailOpens.hasOwnProperty(key)) {
-            console.log(temporaryEmailOpens);
-            temporaryEmailOpensArray.push({
+            temporaryEmailInteractionsArray.push({
                 id: key,
                 event: 'open',
                 count: temporaryEmailOpens[key]
@@ -42,14 +66,25 @@ var cronJob = cron.job("*/60 * * * * *", function() {
         }
     }
 
-    temporaryEmailOpens = {};
+    for (var key in temporaryEmailClicks) {
+        if (temporaryEmailClicks.hasOwnProperty(key)) {
+            temporaryEmailInteractionsArray.push({
+                id: key,
+                event: 'click',
+                count: temporaryEmailClicks[key]
+            });
+        }
+    }
 
-    if (temporaryEmailOpensArray.length > 0) {
-        console.log(temporaryEmailOpensArray);
+    temporaryEmailOpens = {};
+    temporaryEmailClicks = {};
+
+    if (temporaryEmailInteractionsArray.length > 0) {
+        console.log(temporaryEmailInteractionsArray);
         request({
             url: 'https://tabulae.newsai.org/api/incoming/internal_tracker',
             method: 'POST',
-            json: temporaryEmailOpensArray,
+            json: temporaryEmailInteractionsArray,
             auth: {
                 user: 'jebqsdFMddjuwZpgFrRo',
                 password: ''
