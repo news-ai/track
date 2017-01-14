@@ -1,11 +1,58 @@
+'use strict';
+
 var express = require('express');
 var cron = require('cron');
 var request = require('requestretry');
+var elasticsearch = require('elasticsearch');
+var Q = require('q');
 
 var app = express();
 
 var temporaryEmailOpens = {};
 var temporaryEmailClicks = {};
+
+// Instantiate a elasticsearch client
+var client = new elasticsearch.Client({
+    host: 'https://newsai:XkJRNRx2EGCd6@search1.newsai.org',
+    // log: 'trace',
+    rejectUnauthorized: false
+});
+
+// Instantiate a sentry client
+var sentryClient = new raven.Client('https://9cf3075371f04df6b6596d104b17ee70:6a912fbe852a4e67a984821a8eccd431@sentry.io/129310');
+sentryClient.patchGlobal();
+
+function addNotificationToES(emailId, notificationType) {
+    var deferred = Q.defer();
+
+    var esActions = [];
+    var indexRecord = {
+        index: {
+            _index: 'emails',
+            _type: 'log',
+            _id: emailId
+        }
+    };
+    var dataRecord = notificationType;
+
+    esActions.push(indexRecord);
+    esActions.push({
+        data: dataRecord
+    });
+
+    client.bulk({
+        body: esActions
+    }, function(error, response) {
+        if (error) {
+            console.error(error);
+            sentryClient.captureMessage(error);
+            deferred.resolve(false);
+        }
+        deferred.resolve(true);
+    });
+
+    return deferred.promise;
+}
 
 app.get('/', function(req, res) {
     var email_id = req.query.id;
@@ -20,7 +67,9 @@ app.get('/', function(req, res) {
 
             var buf = new Buffer(35);
             buf.write("R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=", "base64");
-            res.send(buf, { 'Content-Type': 'image/gif' }, 200);
+            res.send(buf, {
+                'Content-Type': 'image/gif'
+            }, 200);
 
             return;
         }
