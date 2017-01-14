@@ -5,6 +5,8 @@ var cron = require('cron');
 var request = require('requestretry');
 var elasticsearch = require('elasticsearch');
 var Q = require('q');
+var raven = require('raven');
+var moment = require('moment');
 
 var app = express();
 
@@ -29,8 +31,7 @@ function addNotificationToES(emailId, notificationType) {
     var indexRecord = {
         index: {
             _index: 'emails',
-            _type: 'log',
-            _id: emailId
+            _type: 'log'
         }
     };
     var dataRecord = notificationType;
@@ -67,15 +68,33 @@ app.get('/', function(req, res) {
 
             var buf = new Buffer(35);
             buf.write("R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=", "base64");
-            res.send(buf, {
-                'Content-Type': 'image/gif'
-            }, 200);
 
-            return;
+            var notificationLog = {
+                'Type': 'open',
+                'EmailId': email_id,
+                'CreatedAt': moment(),
+                'Link': ''
+            };
+
+            addNotificationToES(email_id, notificationLog).then(function(returnData) {
+                res.send(buf, {
+                    'Content-Type': 'image/gif'
+                }, 200);
+                res.end();
+                return;
+            }, function (err){
+                sentryClient.captureMessage(err);
+                res.send(buf, {
+                    'Content-Type': 'image/gif'
+                }, 200);
+                res.end();
+                return;
+            });
         }
+    } else {
+        res.send('No ID present.');
+        return;
     }
-
-    res.send('No ID present.');
 });
 
 app.get('/a', function(req, res) {
@@ -99,16 +118,34 @@ app.get('/a', function(req, res) {
             }
             temporaryEmailClicks[email_id] += 1;
 
-            res.writeHead(302, {
-                'Location': email_url
+            var notificationLog = {
+                'Type': 'click',
+                'EmailId': email_id,
+                'CreatedAt': moment(),
+                'Link': email_url
+            };
+
+            addNotificationToES(email_id, notificationLog).then(function(returnData) {
+                // Redirect
+                res.writeHead(302, {
+                    'Location': email_url
+                });
+                res.end();
+                return;
+            }, function (err){
+                // If error then still redirect
+                sentryClient.captureMessage(err);
+                res.writeHead(302, {
+                    'Location': email_url
+                });
+                res.end();
+                return;
             });
-
-            res.end();
-            return;
         }
+    } else {
+        res.send('No ID present.');
+        return;
     }
-
-    res.send('No ID present.');
 });
 
 var cronJob = cron.job("*/60 * * * * *", function() {
