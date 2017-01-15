@@ -7,11 +7,20 @@ var elasticsearch = require('elasticsearch');
 var Q = require('q');
 var raven = require('raven');
 var moment = require('moment');
+var bodyParser = require('body-parser');
 
 var app = express();
 
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+
 var temporaryEmailOpens = {};
 var temporaryEmailClicks = {};
+var temporaryEmailBounces = {};
+var temporaryEmailDelievers = {};
+var temporaryEmailSpams = {};
 
 // Instantiate a elasticsearch client
 var client = new elasticsearch.Client({
@@ -146,6 +155,14 @@ app.get('/a', function(req, res) {
         res.send('No ID present.');
         return;
     }
+});
+
+app.post('/sendgrid', function(req, res) {
+    var data = req.body;
+
+    /* Important SendGrid data
+        - sg_message_id, email, timestamp, event, reason
+    */
 });
 
 var cronJob = cron.job("*/60 * * * * *", function() {
