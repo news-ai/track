@@ -16,11 +16,12 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 
+// Internal
 var temporaryEmailOpens = {};
 var temporaryEmailClicks = {};
-var temporaryEmailBounces = {};
-var temporaryEmailDelievers = {};
-var temporaryEmailSpams = {};
+
+// Sendgrid
+var temporarySendgridEmail = [];
 
 // Instantiate a elasticsearch client
 var client = new elasticsearch.Client({
@@ -163,6 +164,18 @@ app.post('/sendgrid', function(req, res) {
     /* Important SendGrid data
         - sg_message_id, email, timestamp, event, reason
     */
+
+    for (var i = 0; i < data.length; i++) {
+        var sendGridData = {
+            'sg_message_id': data[i].sg_message_id || '',
+            'email': data[i].email || '',
+            'timestamp': data[i].timestamp || 0,
+            'event': data[i].event || '',
+            'reason': data[i].reason || ''
+        };
+
+        temporarySendgridEmail.push(sendGridData);
+    }
 });
 
 var cronJob = cron.job("*/60 * * * * *", function() {
@@ -188,8 +201,11 @@ var cronJob = cron.job("*/60 * * * * *", function() {
         }
     }
 
+    temporaryEmailInteractionsArray = temporaryEmailInteractionsArray.concat(temporarySendgridEmail);
+
     temporaryEmailOpens = {};
     temporaryEmailClicks = {};
+    temporarySendgridEmail = [];
 
     if (temporaryEmailInteractionsArray.length > 0) {
         console.log(temporaryEmailInteractionsArray);
