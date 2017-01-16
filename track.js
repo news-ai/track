@@ -176,6 +176,10 @@ app.post('/sendgrid', function(req, res) {
 
         temporarySendgridEmail.push(sendGridData);
     }
+
+    res.status(200);
+    res.end();
+    return;
 });
 
 var cronJob = cron.job("*/60 * * * * *", function() {
