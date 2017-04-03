@@ -65,6 +65,78 @@ function addNotificationToES(emailId, notificationType) {
     return deferred.promise;
 }
 
+function getEmail(emailId) {
+    var deferred = Q.defer();
+
+    client.get({
+        index: 'emails',
+        type: 'email',
+        id: emailId
+    }).then(function(resp) {
+        if (resp.found) {
+            deferred.resolve(resp._source.data);
+        } else {
+            deferred.resolve({});
+        }
+    }, function(err) {
+        deferred.resolve({});
+    });
+
+    return deferred.promise;
+}
+
+function getEmailTimeseries(userId) {
+    var deferred = Q.defer();
+
+    var dateToday = moment().format('YYYY-MM-DD');
+    var esId = userId + '-' + dateToday;
+
+    client.get({
+        index: 'timeseries',
+        type: 'useremail2',
+        id: esId
+    }).then(function(resp) {
+        if (resp.found) {
+            deferred.resolve(resp._source.data);
+        } else {
+            deferred.resolve({});
+        }
+    }, function(err) {
+        deferred.resolve({});
+    });
+
+    return deferred.promise;
+}
+
+function appendEmailTimeseries(userId, timeseriesData) {
+    var deferred = Q.defer();
+
+    return deferred.promise;
+}
+
+function getAndLogEmailToTimeseries(emailId) {
+    var deferred = Q.defer();
+
+    getEmail(emailId).then(function(response) {
+        var userId = response['CreatedBy'];
+        getEmailTimeseries(userId).then(function(timeseries) {
+            appendEmailTimeseries(userId, timeseries).then(function(status) {
+                deferred.resolve(true);
+            }, function(error) {
+                console.error(error);
+                sentryClient.captureMessage(error);
+                deferred.resolve(false);
+            })
+        })
+    }, function(error) {
+        console.error(error);
+        sentryClient.captureMessage(error);
+        deferred.resolve(false);
+    })
+
+    return deferred.promise;
+}
+
 app.get('/', function(req, res) {
     var email_id = req.query.id;
 
@@ -87,11 +159,20 @@ app.get('/', function(req, res) {
             };
 
             addNotificationToES(email_id, notificationLog).then(function(returnData) {
-                res.send(buf, {
-                    'Content-Type': 'image/gif'
-                }, 200);
-                res.end();
-                return;
+                getAndLogEmailToTimeseries(email_id).then(function(returnData){
+                    res.send(buf, {
+                        'Content-Type': 'image/gif'
+                    }, 200);
+                    res.end();
+                    return;
+                }, function (err) {
+                    sentryClient.captureMessage(err);
+                    res.send(buf, {
+                        'Content-Type': 'image/gif'
+                    }, 200);
+                    res.end();
+                    return;
+                })
             }, function (err){
                 sentryClient.captureMessage(err);
                 res.send(buf, {
