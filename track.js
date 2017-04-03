@@ -108,19 +108,82 @@ function getEmailTimeseries(userId) {
     return deferred.promise;
 }
 
-function appendEmailTimeseries(userId, timeseriesData) {
+function appendEmailTimeseries(emailId, userId, timeseriesData, opens, clicks) {
     var deferred = Q.defer();
+
+    var dateToday = moment().format('YYYY-MM-DD');
+    var esId = userId + '-' + dateToday;
+
+    if (!timeseriesData.Date) {
+        timeseriesData.Date = dateToday
+    }
+
+    if (!timeseriesData.UserId) {
+        timeseriesData.UserId = userId
+    }
+
+    if (timeseriesData.Amount) {
+        timeseriesData.Amount += 1
+    } else {
+        timeseriesData.Amount = 1
+    }
+
+    if (timeseriesData.Clicks) {
+        timeseriesData.Clicks += clicks
+    } else {
+        if (clicks > 0) {
+            timeseriesData.Clicks = clicks
+        } else {
+            timeseriesData.Clicks = 0
+        }
+    }
+
+    if (timeseriesData.Opens) {
+        timeseriesData.Opens += opens
+    } else {
+        if (opens > 0) {
+            timeseriesData.Opens = opens
+        } else {
+            timeseriesData.Opens = 0
+        }
+    }
+
+    var esActions = [];
+    var indexRecord = {
+        index: {
+            _index: 'timeseries',
+            _type: 'useremail2',
+            _id: esId
+        }
+    };
+    var dataRecord = timeseriesData;
+
+    esActions.push(indexRecord);
+    esActions.push({
+        data: dataRecord
+    });
+
+    client.bulk({
+        body: esActions
+    }, function(error, response) {
+        if (error) {
+            console.error(error);
+            sentryClient.captureMessage(error);
+            deferred.resolve(false);
+        }
+        deferred.resolve(true);
+    });
 
     return deferred.promise;
 }
 
-function getAndLogEmailToTimeseries(emailId) {
+function getAndLogEmailToTimeseries(emailId, opens, clicks) {
     var deferred = Q.defer();
 
     getEmail(emailId).then(function(response) {
         var userId = response['CreatedBy'];
         getEmailTimeseries(userId).then(function(timeseries) {
-            appendEmailTimeseries(userId, timeseries).then(function(status) {
+            appendEmailTimeseries(emailId, userId, timeseries, opens, clicks).then(function(status) {
                 deferred.resolve(true);
             }, function(error) {
                 console.error(error);
@@ -159,13 +222,13 @@ app.get('/', function(req, res) {
             };
 
             addNotificationToES(email_id, notificationLog).then(function(returnData) {
-                getAndLogEmailToTimeseries(email_id).then(function(returnData){
+                getAndLogEmailToTimeseries(email_id, 1, 0).then(function(returnData) {
                     res.send(buf, {
                         'Content-Type': 'image/gif'
                     }, 200);
                     res.end();
                     return;
-                }, function (err) {
+                }, function(err) {
                     sentryClient.captureMessage(err);
                     res.send(buf, {
                         'Content-Type': 'image/gif'
@@ -173,7 +236,7 @@ app.get('/', function(req, res) {
                     res.end();
                     return;
                 })
-            }, function (err){
+            }, function(err) {
                 sentryClient.captureMessage(err);
                 res.send(buf, {
                     'Content-Type': 'image/gif'
@@ -217,13 +280,23 @@ app.get('/a', function(req, res) {
             };
 
             addNotificationToES(email_id, notificationLog).then(function(returnData) {
-                // Redirect
-                res.writeHead(302, {
-                    'Location': email_url
+                getAndLogEmailToTimeseries(email_id, 0, 1).then(function(returnData) {
+                    // Redirect
+                    res.writeHead(302, {
+                        'Location': email_url
+                    });
+                    res.end();
+                    return;
+                }, function(err) {
+                    // If error then still redirect
+                    sentryClient.captureMessage(err);
+                    res.writeHead(302, {
+                        'Location': email_url
+                    });
+                    res.end();
+                    return;
                 });
-                res.end();
-                return;
-            }, function (err){
+            }, function(err) {
                 // If error then still redirect
                 sentryClient.captureMessage(err);
                 res.writeHead(302, {
