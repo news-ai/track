@@ -122,10 +122,8 @@ function appendEmailTimeseries(emailId, userId, timeseriesData, opens, clicks) {
         timeseriesData.UserId = userId
     }
 
-    if (timeseriesData.Amount) {
-        timeseriesData.Amount += 1
-    } else {
-        timeseriesData.Amount = 1
+    if (!timeseriesData.Amount) {
+        timeseriesData.Amount = 0
     }
 
     if (timeseriesData.Clicks) {
