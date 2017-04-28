@@ -253,8 +253,14 @@ app.get('/a', function(req, res) {
     var rawQueryParameters = require('url').parse(req.url).query;
     var emailUrlRaw = rawQueryParameters.split('&url=');
 
+    console.log(emailUrlRaw);
+
     if (emailUrlRaw.length > 1) {
-        emailUrlRaw = emailUrlRaw[1];
+        if (emailUrlRaw[1].includes('email2.newsai.co') && emailUrlRaw.length > 2) {
+            emailUrlRaw = emailUrlRaw[2];
+        } else {
+            emailUrlRaw = emailUrlRaw[1];
+        }
     } else {
         emailUrlRaw = false;
     }
