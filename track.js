@@ -257,7 +257,7 @@ app.get('/a', function(req, res) {
 
     if (emailUrlRaw.length > 1) {
         if (emailUrlRaw[1].includes('email2.newsai.co') && emailUrlRaw.length > 2) {
-            emailUrlRaw = emailUrlRaw[2];
+            emailUrlRaw = emailUrlRaw[emailUrlRaw.length - 1];
         } else {
             emailUrlRaw = emailUrlRaw[1];
         }
