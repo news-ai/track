@@ -206,6 +206,7 @@ app.get('/', function(req, res) {
     if (!websiteReferral) {
         isTabulaeTraffic = false;
     } else {
+        console.log(websiteReferral);
         if (websiteReferral.indexOf('tabulae.newsai.co/') !== -1) {
             isTabulaeTraffic = true;
         }
