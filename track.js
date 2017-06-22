@@ -200,17 +200,28 @@ function getAndLogEmailToTimeseries(emailId, opens, clicks) {
 
 app.get('/', function(req, res) {
     var email_id = req.query.id;
+    var websiteReferral = req.get('Referrer');
+    var isTabulaeTraffic = false;
+
+    if (!websiteReferral) {
+        isTabulaeTraffic = false;
+    } else {
+        if (websiteReferral.indexOf('tabulae.newsai.co/') !== -1) {
+            isTabulaeTraffic = true;
+        }
+    }
 
     if (email_id) {
+        var buf = new Buffer(35);
+        buf.write("R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=", "base64");
+
         var isnum = /^\d+$/.test(email_id);
-        if (isnum) {
+        console.log('Tabulae traffic: ' + isTabulaeTraffic)
+        if (isnum && !isTabulaeTraffic) {
             if (!temporaryEmailOpens.hasOwnProperty(email_id)) {
                 temporaryEmailOpens[email_id] = 0;
             }
             temporaryEmailOpens[email_id] += 1;
-
-            var buf = new Buffer(35);
-            buf.write("R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=", "base64");
 
             var notificationLog = {
                 'Type': 'open',
@@ -242,6 +253,13 @@ app.get('/', function(req, res) {
                 res.end();
                 return;
             });
+        } else {
+            // sentryClient.captureMessage("No ID present   ");
+            res.send(buf, {
+                'Content-Type': 'image/gif'
+            }, 200);
+            res.end();
+            return;
         }
     } else {
         res.send('No ID present.');
