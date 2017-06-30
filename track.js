@@ -25,7 +25,7 @@ var temporarySendgridEmail = [];
 
 // Instantiate a elasticsearch client
 var client = new elasticsearch.Client({
-    host: 'https://newsai:XkJRNRx2EGCd6@search1.newsai.org',
+    host: 'https://newsai:XkJRNRx2EGCd6@search.newsai.org',
     // log: 'trace',
     rejectUnauthorized: false
 });
@@ -207,7 +207,7 @@ app.get('/', function(req, res) {
         isTabulaeTraffic = false;
     } else {
         console.log(websiteReferral);
-        if (websiteReferral.indexOf('tabulae.newsai.co/') !== -1) {
+        if (websiteReferral.indexOf('tabulae.newsai.co') !== -1) {
             isTabulaeTraffic = true;
         }
     }
