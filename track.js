@@ -69,7 +69,7 @@ function getEmail(emailId) {
     var deferred = Q.defer();
 
     client.get({
-        index: 'emails1',
+        index: 'emails2',
         type: 'email',
         id: emailId
     }).then(function(resp) {
