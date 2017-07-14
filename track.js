@@ -109,8 +109,15 @@ function getEmailTimeseries(userId) {
     return deferred.promise;
 }
 
-function sendEmailNotificationToLive(email, emailAction) {
+function sendEmailNotificationToLive(email, opens, clicks) {
     var deferred = Q.defer();
+
+    var emailAction = '';
+    if (opens > 0) {
+        emailAction = 'open';
+    } else {
+        emailAction = 'click';
+    }
 
     var emailData = {
         'to': email['To'],
@@ -215,13 +222,19 @@ function getAndLogEmailToTimeseries(emailId, opens, clicks) {
         var userId = response['CreatedBy'];
         getEmailTimeseries(userId).then(function(timeseries) {
             appendEmailTimeseries(emailId, userId, timeseries, opens, clicks).then(function(status) {
-                deferred.resolve(true);
+                sendEmailNotificationToLive(response, opens, clicks).then(function(status) {
+                    deferred.resolve(true);
+                }, function(error) {
+                    console.error(error);
+                    sentryClient.captureMessage(error);
+                    deferred.resolve(false);
+                });
             }, function(error) {
                 console.error(error);
                 sentryClient.captureMessage(error);
                 deferred.resolve(false);
-            })
-        })
+            });
+        });
     }, function(error) {
         console.error(error);
         sentryClient.captureMessage(error);
@@ -278,7 +291,7 @@ app.get('/', function(req, res) {
                     }, 200);
                     res.end();
                     return;
-                })
+                });
             }, function(err) {
                 sentryClient.captureMessage(err);
                 res.send(buf, {
