@@ -109,7 +109,7 @@ function getEmailTimeseries(userId) {
     return deferred.promise;
 }
 
-function sendEmailNotificationToLive(email, opens, clicks) {
+function sendEmailNotificationToLive(email, opens, clicks, clickLink) {
     var deferred = Q.defer();
 
     var emailAction = '';
@@ -121,7 +121,8 @@ function sendEmailNotificationToLive(email, opens, clicks) {
 
     var emailData = {
         'to': email['To'],
-        'subject': email['Subject']
+        'subject': email['Subject'],
+        'link': clickLink
     };
     var notification = {
         'resouceName': 'email',
@@ -215,14 +216,14 @@ function appendEmailTimeseries(emailId, userId, timeseriesData, opens, clicks) {
     return deferred.promise;
 }
 
-function getAndLogEmailToTimeseries(emailId, opens, clicks) {
+function getAndLogEmailToTimeseries(emailId, opens, clicks, clickLink) {
     var deferred = Q.defer();
 
     getEmail(emailId).then(function(response) {
         var userId = response['CreatedBy'];
         getEmailTimeseries(userId).then(function(timeseries) {
             appendEmailTimeseries(emailId, userId, timeseries, opens, clicks).then(function(status) {
-                sendEmailNotificationToLive(response, opens, clicks).then(function(status) {
+                sendEmailNotificationToLive(response, opens, clicks, clickLink).then(function(status) {
                     deferred.resolve(true);
                 }, function(error) {
                     console.error(error);
@@ -278,7 +279,7 @@ app.get('/', function(req, res) {
             };
 
             addNotificationToES(email_id, notificationLog).then(function(returnData) {
-                getAndLogEmailToTimeseries(email_id, 1, 0).then(function(returnData) {
+                getAndLogEmailToTimeseries(email_id, 1, 0, '').then(function(returnData) {
                     res.send(buf, {
                         'Content-Type': 'image/gif'
                     }, 200);
@@ -349,7 +350,7 @@ app.get('/a', function(req, res) {
             };
 
             addNotificationToES(email_id, notificationLog).then(function(returnData) {
-                getAndLogEmailToTimeseries(email_id, 0, 1).then(function(returnData) {
+                getAndLogEmailToTimeseries(email_id, 0, 1, email_url).then(function(returnData) {
                     // Redirect
                     res.writeHead(302, {
                         'Location': email_url
