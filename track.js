@@ -26,7 +26,6 @@ var temporarySendgridEmail = [];
 // Instantiate a elasticsearch client
 var client = new elasticsearch.Client({
     host: 'https://newsai:XkJRNRx2EGCd6@search.newsai.org',
-    // log: 'trace',
     rejectUnauthorized: false
 });
 
@@ -101,8 +100,42 @@ function getEmailTimeseries(userId) {
         } else {
             deferred.resolve({});
         }
-    }, function(err) {
+    }, function(error) {
+        console.error(error);
+        sentryClient.captureMessage(error);
         deferred.resolve({});
+    });
+
+    return deferred.promise;
+}
+
+function sendEmailNotificationToLive(email, emailAction) {
+    var deferred = Q.defer();
+
+    var emailData = {
+        'to': email['To'],
+        'subject': email['Subject']
+    };
+    var notification = {
+        'resouceName': 'email',
+        'resourceId':  email['Id'].toString(),
+        'resourceAction': emailAction,
+        'userId': email['CreatedBy'],
+        'data': JSON.stringify(emailData)
+    };
+
+    request({
+        url: 'https://live-1.newsai.org/notification',
+        method: 'POST',
+        json: notification,
+        maxAttempts: 1
+    }, function(error, response, body) {
+        if (error) {
+            console.error(error);
+            sentryClient.captureMessage(error);
+            deferred.reject(new Error(error));
+        }
+        deferred.resolve(true);
     });
 
     return deferred.promise;
@@ -255,7 +288,7 @@ app.get('/', function(req, res) {
                 return;
             });
         } else {
-            // sentryClient.captureMessage("No ID present   ");
+            // sentryClient.captureMessage("No ID present");
             res.send(buf, {
                 'Content-Type': 'image/gif'
             }, 200);
@@ -402,6 +435,7 @@ var cronJob = cron.job("*/60 * * * * *", function() {
         }, function(error, response, body) {
             if (error) {
                 console.error(error);
+                sentryClient.captureMessage(error);
             }
         });
     }
