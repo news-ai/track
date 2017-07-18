@@ -102,7 +102,6 @@ function getEmailTimeseries(userId) {
         }
     }, function(error) {
         console.error(error);
-        sentryClient.captureMessage(error);
         deferred.resolve({});
     });
 
@@ -126,7 +125,7 @@ function sendEmailNotificationToLive(email, opens, clicks, clickLink) {
     };
     var notification = {
         'resouceName': 'email',
-        'resourceId':  email['Id'],
+        'resourceId': email['Id'],
         'resourceAction': emailAction,
         'userId': email['CreatedBy'],
         'data': JSON.stringify(emailData)
@@ -235,6 +234,10 @@ function getAndLogEmailToTimeseries(emailId, opens, clicks, clickLink) {
                 sentryClient.captureMessage(error);
                 deferred.resolve(false);
             });
+        }, function(error) {
+            console.error(error);
+            sentryClient.captureMessage(error);
+            deferred.resolve(false);
         });
     }, function(error) {
         console.error(error);
