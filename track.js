@@ -124,7 +124,7 @@ function sendEmailNotificationToLive(email, opens, clicks, clickLink) {
         'link': clickLink
     };
     var notification = {
-        'resouceName': 'email',
+        'resourceName': 'email',
         'resourceId': email['Id'],
         'resourceAction': emailAction,
         'userId': email['CreatedBy'],
