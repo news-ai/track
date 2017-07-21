@@ -128,7 +128,8 @@ function sendEmailNotificationToLive(email, opens, clicks, clickLink) {
         'resourceId': email['Id'],
         'resourceAction': emailAction,
         'userId': email['CreatedBy'],
-        'data': JSON.stringify(emailData)
+        'data': JSON.stringify(emailData),
+        'createdAt': moment().format('YYYY-MM-DDTHH:mm:ss')
     };
 
     request({
