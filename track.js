@@ -139,7 +139,8 @@ function sendEmailNotificationToLive(email, opens, clicks, clickLink) {
         url: 'https://live-1.newsai.org/notification',
         method: 'POST',
         json: notification,
-        maxAttempts: 1
+        maxAttempts: 1,
+        timeout: 2000
     }, function(error, response, body) {
         if (error) {
             console.error(error);
