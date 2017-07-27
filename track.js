@@ -119,20 +119,20 @@ function sendEmailNotificationToLive(email, opens, clicks, clickLink) {
     }
 
     var emailData = {
-        'to': email['To'],
-        'subject': email['Subject'],
-        'link': clickLink,
-        'listid': email['ListId'],
-        'contactId': email['ContactId']
+        'to': email['To'] || '',
+        'subject': email['Subject'] || '',
+        'link': clickLink || '',
+        'listid': email['ListId'] || 0,
+        'contactId': email['ContactId'] || 0
     };
 
     var notification = {
         'resourceName': 'email',
-        'resourceId': email['Id'],
-        'resourceAction': emailAction,
-        'userId': email['CreatedBy'],
-        'data': JSON.stringify(emailData),
-        'createdAt': moment().format('YYYY-MM-DDTHH:mm:ss')
+        'resourceId': email['Id'] || 0,
+        'resourceAction': emailAction || '',
+        'userId': email['CreatedBy'] || 0,
+        'data': JSON.stringify(emailData) || {},
+        'createdAt': moment().format('YYYY-MM-DDTHH:mm:ss') || ''
     };
 
     request({
