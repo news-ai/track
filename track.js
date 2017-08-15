@@ -350,6 +350,10 @@ app.get('/a', function(req, res) {
             }
             temporaryEmailClicks[email_id] += 1;
 
+            if (email_url === 'https://tabulae.newsai.co/tables/5326642465472512') {
+                email_url = 'https://www.kindtraveler.com/'
+            }
+
             var notificationLog = {
                 'Type': 'click',
                 'EmailId': email_id,
