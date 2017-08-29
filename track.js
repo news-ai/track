@@ -450,13 +450,9 @@ var cronJob = cron.job("*/60 * * * * *", function() {
     if (temporaryEmailInteractionsArray.length > 0) {
         console.log(temporaryEmailInteractionsArray);
         request({
-            url: 'https://tabulae.newsai.org/api/incoming/internal_tracker',
+            url: 'https://updates-dot-newsai-1166.appspot.com/incoming',
             method: 'POST',
             json: temporaryEmailInteractionsArray,
-            auth: {
-                user: 'jebqsdFMddjuwZpgFrRo',
-                password: ''
-            },
             maxAttempts: 1
         }, function(error, response, body) {
             if (error) {
