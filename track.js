@@ -418,7 +418,7 @@ app.post('/sendgrid', function(req, res) {
     return;
 });
 
-var cronJob = cron.job("*/60 * * * * *", function() {
+var cronJob = cron.job("*/30 * * * * *", function() {
     var temporaryEmailInteractionsArray = [];
 
     for (var key in temporaryEmailOpens) {
