@@ -411,11 +411,11 @@ app.post('/sendgrid', function(req, res) {
         };
 
         if ('email_id' in data[i]) {
-            sendGridData['emailId'] data[i].email_id;
+            sendGridData['emailId'] = data[i].email_id;
         }
 
         if ('customer_account_number' in data[i]) {
-            sendGridData['createdBy'] data[i].customer_account_number;
+            sendGridData['createdBy'] = data[i].customer_account_number;
         }
 
         temporarySendgridEmail.push(sendGridData);
