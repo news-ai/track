@@ -410,6 +410,14 @@ app.post('/sendgrid', function(req, res) {
             'reason': data[i].reason || ''
         };
 
+        if ('email_id' in data[i]) {
+            sendGridData['emailId'] data[i].email_id;
+        }
+
+        if ('customer_account_number' in data[i]) {
+            sendGridData['createdBy'] data[i].customer_account_number;
+        }
+
         temporarySendgridEmail.push(sendGridData);
     }
 
